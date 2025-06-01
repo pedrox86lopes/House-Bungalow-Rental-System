@@ -1,8 +1,15 @@
 {
+<<<<<<< HEAD
   "hash": "37ee0009",
   "configHash": "3c1e81c5",
   "lockfileHash": "8251dd44",
   "browserHash": "d0a7295e",
+=======
+  "hash": "a9350948",
+  "configHash": "3c1e81c5",
+  "lockfileHash": "e3b0c442",
+  "browserHash": "ca0a7fa3",
+>>>>>>> b0dc49f (Rental System - First commit)
   "optimized": {},
   "chunks": {}
 }
