@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Message;
-use App\Models\User; // Import User model
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -22,13 +22,25 @@ class MessageController extends Controller
      * Show the form for creating a new message to a specific user.
      * @param User $receiver The user to whom the message will be sent.
      */
-    public function create(User $receiver)
+    public function create(User $receiver, Request $request)
     {
         // Prevent sending message to self (optional)
         if (Auth::id() === $receiver->id) {
             return redirect()->back()->with('error', 'Não pode enviar mensagens para si próprio.');
         }
-        return view('messages.create', compact('receiver'));
+
+        // Pass reservation info if present (for autofill)
+        $reservation = null;
+        if ($request->has('reservation_id')) {
+            $reservation = [
+                'id' => $request->input('reservation_id'),
+                'start_date' => $request->input('start_date'),
+                'end_date' => $request->input('end_date'),
+                'status' => $request->input('status'),
+            ];
+        }
+
+        return view('messages.create', compact('receiver', 'reservation'));
     }
 
     /**
@@ -37,16 +49,20 @@ class MessageController extends Controller
     public function store(Request $request, User $receiver)
     {
         $request->validate([
-            'subject' => 'nullable|string|max:255',
-            'body' => 'required|string',
-        ]);
+        'subject' => 'nullable|string|max:255',
+        'body' => 'required|string',
+        'reservation_id' => 'nullable|integer',
+        'start_date' => 'nullable|date',
+        'end_date' => 'nullable|date',
+        'status' => 'nullable|string',
+    ]);
 
         Message::create([
-            'sender_id' => Auth::id(),
-            'receiver_id' => $receiver->id,
-            'subject' => $request->subject,
-            'body' => $request->body,
-        ]);
+        'sender_id'     => Auth::id(),
+        'receiver_id'   => $receiver->id,
+        'subject'       => $request->subject,
+        'body'          => $request->body,
+    ]);
 
         return redirect()->route('messages.index')->with('success', 'Mensagem enviada com sucesso!');
     }

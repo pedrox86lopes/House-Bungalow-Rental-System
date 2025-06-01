@@ -3,33 +3,60 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log; // Don't forget to import Log
 use Illuminate\Support\Facades\Auth;
+use App\Models\User; // Import the User model
+use App\Models\Message; // Import the Message model
 
 class ContactController extends Controller
 {
     /**
-     * Handle the submission of the contact admin form.
+     * Display the contact form to send a message to the admin.
+     * This method is called by the route `contact.admin.create`
+     */
+    public function showContactForm()
+    {
+        // You might want to get the admin user here if you need their name for the form
+        $adminEmail = config('app.admin_email');
+        $adminUser = User::where('email', $adminEmail)->first();
+
+        if (!$adminUser) {
+            // Handle case where admin user is not found, e.g., redirect with error
+            return redirect()->back()->with('error', 'O administrador não foi encontrado. Por favor, contacte o suporte técnico.');
+        }
+
+        return view('contact.admin_form', compact('adminUser')); // You'll create this view
+    }
+
+    /**
+     * Store a new message to the administrator.
+     * This method is called by the route `contact.admin` (POST)
      */
     public function sendMessage(Request $request)
     {
+        // 1. Find the administrator user
+        $adminEmail = config('app.admin_email');
+        $adminUser = User::where('email', $adminEmail)->first();
+
+        // If admin user is not found, redirect back with an error
+        if (!$adminUser) {
+            return redirect()->back()->with('error', 'O gestor de reservas não foi encontrado. Por favor, contacte o suporte técnico.');
+        }
+
+        // 2. Validate the request data
         $request->validate([
-            'subject' => 'required|string|max:255',
-            'message' => 'required|string',
+            'subject' => 'nullable|string|max:255', // Subject is optional as per your form
+            'message' => 'required|string',         // The body of the message
         ]);
 
-        // Here you would implement your logic to send the message to the admin.
-        // This could be:
-        // 1. Sending an email notification to the admin (e.g., using Mail::to('admin@example.com')->send(new AdminContactMail($request->all())));
-        // 2. Storing the message in a 'feedback' or 'admin_messages' table in the database for the admin to view later.
-        // 3. Using a third-party service.
-
-        // For now, we'll just log it and redirect.
-        Log::info('Admin Contact Message from ' . Auth::user()->email . ':', [
-            'subject' => $request->subject,
-            'message' => $request->message
+        // 3. Create a new message in the database
+        Message::create([
+            'sender_id'     => Auth::id(),         // The currently authenticated user
+            'receiver_id'   => $adminUser->id,     // The admin user
+            'subject'       => $request->subject,
+            'body'          => $request->message,  // Use 'message' from the form
         ]);
 
-        return redirect()->back()->with('success', 'A sua mensagem foi enviada para o Gestor! - CONFIRMAR em logs/laravel.log :)');
+        // 4. Redirect back with a success message
+        return redirect()->back()->with('success', 'A sua mensagem foi enviada ao gestor de reservas com sucesso!');
     }
 }

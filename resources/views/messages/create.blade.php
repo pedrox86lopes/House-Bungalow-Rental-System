@@ -29,11 +29,26 @@
                     <form action="{{ route('messages.store', $receiver->id) }}" method="POST" class="space-y-6">
                         @csrf
 
+                        {{-- Autofill reservation info if available --}}
+                        @if(isset($reservation))
+                            <div class="mb-4">
+                                <div class="text-sm text-gray-700 dark:text-gray-300">
+                                    <strong>Reserva:</strong> #{{ $reservation['id'] }}<br>
+                                    <strong>Período:</strong> {{ $reservation['start_date'] }} - {{ $reservation['end_date'] }}<br>
+                                    <strong>Status:</strong> {{ ucfirst($reservation['status']) }}
+                                </div>
+                                <input type="hidden" name="reservation_id" value="{{ $reservation['id'] }}">
+                                <input type="hidden" name="start_date" value="{{ $reservation['start_date'] }}">
+                                <input type="hidden" name="end_date" value="{{ $reservation['end_date'] }}">
+                                <input type="hidden" name="status" value="{{ $reservation['status'] }}">
+                            </div>
+                        @endif
+
                         <div>
                             <label for="subject" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Assunto (Opcional):</label>
                             <input type="text" name="subject" id="subject"
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
-                                value="{{ old('subject') }}">
+                                value="{{ old('subject', isset($reservation) ? 'Reserva #' . $reservation['id'] . ' - ' . $reservation['start_date'] . ' a ' . $reservation['end_date'] . ' (' . ucfirst($reservation['status']) . ')' : '') }}">
                         </div>
 
                         <div>

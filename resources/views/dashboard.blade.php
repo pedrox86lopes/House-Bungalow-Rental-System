@@ -15,7 +15,6 @@
             </div>
 
             {{-- COMMON SUCCESS/ERROR MESSAGE DISPLAY --}}
-            {{-- This block will display messages from any action that uses `->with('success', ...)` or `->with('error', ...)` --}}
             @if (session('success'))
                 <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
                     <span class="block sm:inline">{{ session('success') }}</span>
@@ -36,11 +35,84 @@
                 </div>
             @endif
 
+            {{-- Admin Messages Section (Visible only to the specific admin email) --}}
+            @if(Auth::user()->email === config('app.admin_email'))
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg border-l-4 border-indigo-500">
+                    <div class="p-6 text-gray-900 dark:text-gray-100">
+                        <h3 class="text-2xl font-bold mb-4 flex items-center">
+                            <svg class="h-8 w-8 text-indigo-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8m-1 10a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h12a2 2 0 012 2v10z" />
+                            </svg>
+                            Mensagens Recebidas (Administrador)
+                            @php
+                                $unreadAdminMessagesCount = $adminMessages->whereNull('read_at')->count();
+                            @endphp
+                            @if($unreadAdminMessagesCount > 0)
+                                <span class="ml-2 px-3 py-1 text-sm font-semibold rounded-full bg-red-500 text-white dark:bg-red-700">
+                                    {{ $unreadAdminMessagesCount }} não lida{{ $unreadAdminMessagesCount > 1 ? 's' : '' }}
+                                </span>
+                            @endif
+                        </h3>
+
+                        @if ($adminMessages->isEmpty())
+                            <p class="text-gray-600 dark:text-gray-400">Não há mensagens recebidas para o administrador.</p>
+                        @else
+                            <div class="overflow-x-auto mb-4">
+                                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                    <thead class="bg-gray-50 dark:bg-gray-700">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                                De
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                                Assunto
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                                Recebido Em
+                                            </th>
+                                            <th scope="col" class="relative px-6 py-3">
+                                                <span class="sr-only">Ver</span>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                        @foreach ($adminMessages->take(5) as $message) {{-- Show more admin messages if desired --}}
+                                            <tr class="{{ is_null($message->read_at) ? 'font-bold bg-blue-50 dark:bg-blue-900/20' : 'text-gray-600 dark:text-gray-300' }}">
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                                    {{ $message->sender->name }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                                    {{ Str::limit($message->subject ?? 'Sem Assunto', 40) }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                                    {{ $message->created_at->format('d/m/Y H:i') }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                    <a href="{{ route('messages.show', $message->id) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-200">Ver Mensagem</a>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="text-right">
+                                <a href="{{ route('messages.index') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Ver Todas as Mensagens do Administrador
+                                </a>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
 
             {{-- User Messages Section --}}
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
-                    <h3 class="text-2xl font-bold mb-4">Minhas Mensagens
+                    <h3 class="text-2xl font-bold mb-4 flex items-center">
+                        <svg class="h-8 w-8 text-gray-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8m-1 10a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h12a2 2 0 012 2v10z" />
+                        </svg>
+                        Minhas Mensagens
                         @if($unreadMessagesCount > 0)
                             <span class="ml-2 px-3 py-1 text-sm font-semibold rounded-full bg-red-500 text-white dark:bg-red-700">
                                 {{ $unreadMessagesCount }} não lida{{ $unreadMessagesCount > 1 ? 's' : '' }}
@@ -98,7 +170,6 @@
                     @endif
                 </div>
             </div>
-
 
             {{-- User Reservations Section --}}
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
@@ -182,11 +253,6 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <h3 class="text-2xl font-bold mb-4">Enviar Mensagem ao Gestor das Reservas</h3>
-
-                    {{-- THESE ARE NOW HANDLED BY THE COMMON BLOCK AT THE TOP --}}
-                    {{-- @if (session('success')) ... @endif --}}
-                    {{-- @if (session('error')) ... @endif --}}
-                    {{-- @if ($errors->any()) ... @endif --}}
 
                     <form action="{{ route('contact.admin') }}" method="POST">
                         @csrf
