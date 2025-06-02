@@ -22,7 +22,7 @@
                         </x-nav-link>
                         {{-- Add Admin Dashboard link only for admins --}}
                         {{-- Assuming Auth::user()->is_admin is a property or method on your User model --}}
-                        @if(Auth::user()->is_admin ?? false)
+                    @auth
                             <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
                                 Painel de Administração
                             </x-nav-link>
