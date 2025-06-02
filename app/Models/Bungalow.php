@@ -13,7 +13,11 @@ class Bungalow extends Model
         'name',
         'description',
         'price_per_night',
-        'image_url' // Add this line
+        'image_url',
+        'bedrooms',
+        'beds',
+        'bathrooms',
+        'accommodates',
     ];
 
     public function bookings()

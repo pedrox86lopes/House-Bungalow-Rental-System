@@ -27,7 +27,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // User Dashboard - Now pointing to DashboardController
+    // User Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['verified'])->name('dashboard');
 
     // Booking related routes
@@ -56,7 +56,7 @@ Route::middleware('auth')->group(function () {
     // Existing POST route to handle the form submission
     Route::post('/contact-admin', [ContactController::class, 'sendMessage'])->name('contact.admin');
 
-    // Message routes (within the 'auth' middleware group)
+    // Message routes
     Route::prefix('messages')->name('messages.')->group(function () {
     Route::get('/', [MessageController::class, 'index'])->name('index'); // User's inbox
     Route::get('/create/{receiver}', [MessageController::class, 'create'])->name('create'); // Form to send message to a specific user
