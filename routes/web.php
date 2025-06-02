@@ -32,7 +32,7 @@ Route::middleware('auth')->group(function () {
 
     // Booking related routes
     Route::get('/book/{bungalowId}', [BookingController::class, 'create'])->name('booking.create');
-    Route::post('/book/confirm-and-pay', [BookingController::class, 'confirmAndPay'])->name('booking.confirm_and_pay');
+    Route::post('/book/confirm-and-pay', [BookingController::class, 'confirmAnd_pay'])->name('booking.confirm_and_pay');
     Route::get('/my-reservations', [BookingController::class, 'userBookings'])->name('user.reservations');
 
     // PayPal transaction routes
@@ -44,8 +44,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/finish', [PayPalController::class, 'finishTransaction'])->name('finish');
     });
 
-    // Admin Dashboard
-    Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    // Admin Dashboard - Restricted to ADMIN_EMAIL via middleware
+    Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])
+        ->name('admin.dashboard')
+        ->middleware('admin.access');
 
     // Route for sending message to admin
     Route::post('/contact-admin', [ContactController::class, 'sendMessage'])->name('contact.admin');
@@ -53,8 +55,7 @@ Route::middleware('auth')->group(function () {
     // Route to display the contact form
     Route::get('/contact-admin/create', [ContactController::class, 'showContactForm'])->name('contact.admin.create');
 
-    // Existing POST route to handle the form submission
-    Route::post('/contact-admin', [ContactController::class, 'sendMessage'])->name('contact.admin');
+    // Route::post('/contact-admin', [ContactController::class, 'sendMessage'])->name('contact.admin');
 
     // Message routes
     Route::prefix('messages')->name('messages.')->group(function () {
