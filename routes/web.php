@@ -49,6 +49,7 @@ Route::middleware('auth')->group(function () {
         ->name('admin.dashboard')
         ->middleware('admin.access');
 
+
     // Route for sending message to admin
     Route::post('/contact-admin', [ContactController::class, 'sendMessage'])->name('contact.admin');
 
