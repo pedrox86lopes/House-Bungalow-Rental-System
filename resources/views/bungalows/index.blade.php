@@ -10,7 +10,7 @@
     <div class="py-12"> {{-- This div provides standard padding and max-width for content --}}
         {{-- Hero Section for Bungalows Page --}}
         <div class="relative bg-cover bg-center py-20 text-white text-center mb-10 rounded-lg shadow-lg"
-            style="background-image: url('https://images.unsplash.com/photo-1570129476816-c0c1692e850b?auto=format&fit=crop&q=80&w=1974&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');">
+            style="background-image: url('/storage/bungalows/4.jpg');">
             {{-- Overlay for better text readability --}}
             <div class="absolute inset-0 bg-black opacity-60 rounded-lg"></div>
             <div class="relative z-10 container mx-auto px-4">

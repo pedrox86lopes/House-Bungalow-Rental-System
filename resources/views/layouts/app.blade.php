@@ -25,7 +25,7 @@
             @endisset
 
             <main>
-                {{ $slot }} {{-- THIS IS THE CRITICAL CHANGE! --}}
+                {{ $slot }}
             </main>
         </div>
     </body>
