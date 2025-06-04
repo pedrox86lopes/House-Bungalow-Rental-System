@@ -28,11 +28,6 @@
                             Dashboard
                         </a>
                     </li>
-
-                    </li>
-
-                    {{-- The "Utilizadores" link is removed as there's no corresponding route --}}
-                    {{-- The admin-to-user messaging feature requires new routes, so it's also removed from the sidebar --}}
                     <li class="mb-3">
                         {{-- Linking to user's general message inbox --}}
                         <a href="{{ route('messages.index') }}" class="flex items-center text-gray-700 hover:text-blue-600 font-medium py-2 px-3 rounded-lg hover:bg-blue-50 transition duration-200">
@@ -40,7 +35,6 @@
                             Minhas Mensagens
                         </a>
                     </li>
-
                 </ul>
             </nav>
         </aside>
@@ -72,69 +66,105 @@
                 </div>
             </div>
 
+            ---
 
-            <h2 class="text-4xl font-extrabold text-gray-800 mb-8 border-b pb-4">Últimas Reservas</h2>
+            {{-- Reservations Grouped by Status --}}
+            {{-- Using the variables passed directly from the AdminController --}}
+            @php
+                // Create an array for easy iteration, ensuring keys match the display logic below
+                $allBookingsGrouped = [
+                    'paid' => $paidBookings,
+                    'pending' => $pendingBookings,
+                    'cancelled' => $cancelledBookings,
+                ];
+            @endphp
 
-            @forelse ($bookings as $booking)
-            <div class="flex-shrink-0 mt-4 md:mt-0 flex flex-col gap-2">
-            <a href="{{ route('bungalows.show', $booking->bungalow->id) }}" class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center transition duration-200 shadow-sm">
-            <span data-lucide="eye" class="w-4 h-4 mr-2"></span> Ver Bungalow
-            </a>
+            @foreach ($allBookingsGrouped as $statusKey => $statusBookings)
+                <div class="mb-12">
+                    <h2 class="text-4xl font-extrabold text-gray-800 mb-8 border-b pb-4">
+                        @if ($statusKey === 'paid')
+                            Reservas Pagas
+                        @elseif ($statusKey === 'pending')
+                            Reservas Pendentes
+                        @else
+                            Reservas Canceladas
+                        @endif
+                        <span class="text-gray-500 text-2xl ml-2">({{ $statusBookings->count() }})</span>
+                    </h2>
 
-
-        </div>
-                <div class="bg-white rounded-xl shadow-md p-6 mb-6 flex flex-col md:flex-row items-center md:items-start gap-6 hover:shadow-lg transition-shadow duration-200">
-                    <div class="flex-shrink-0">
-                        <img src="{{ asset($booking->bungalow->image_url ?? 'https://placehold.co/200x150/E0E0E0/333333?text=Bungalow') }}"
-                             alt="{{ $booking->bungalow->name }}"
-                             class="w-48 h-36 object-cover rounded-lg shadow">
-                    </div>
-                    <div class="flex-grow text-center md:text-left">
-                        <h3 class="text-2xl font-bold text-gray-900 mb-2">{{ $booking->bungalow->name }}</h3>
-                        <p class="text-gray-700 text-lg mb-1">
-                            <span class="font-semibold">Cliente:</span> {{ $booking->user->name ?? 'N/A' }} (ID: {{ $booking->user_id }})
-                        </p>
-                        <p class="text-gray-700 text-lg mb-1">
-                            <span class="font-semibold">Email:</span> {{ $booking->user->email ?? 'N/A' }}
-                        </p>
-                        <p class="text-gray-700 text-lg mb-1">
-                            <span class="font-semibold">Período:</span> {{ \Carbon\Carbon::parse($booking->start_date)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($booking->end_date)->format('d/m/Y') }}
-                        </p>
-                        <p class="text-gray-700 text-lg mb-1">
-                            <span class="font-semibold">Total:</span> <span class="text-green-600 font-bold">€{{ number_format($booking->total_price, 2, ',', '.') }}</span>
-                        </p>
-                        <p class="text-gray-700 text-lg">
-                            <span class="font-semibold">Estado:</span>
-                            @php
-                                $statusClass = [
-                                    'pending' => 'bg-yellow-100 text-yellow-800',
-                                    'paid' => 'bg-green-100 text-green-800',
-                                    'cancelled' => 'bg-red-100 text-red-800',
-                                    'failed' => 'bg-red-100 text-red-800',
-                                ][$booking->status] ?? 'bg-gray-100 text-gray-800';
-                            @endphp
-                            <span class="inline-block px-3 py-1 rounded-full text-sm font-medium {{ $statusClass }}">
-                                {{ ucfirst($booking->status) }}
-                            </span>
-                        </p>
-                    </div>
-                    <div class="flex-shrink-0 mt-4 md:mt-0 flex flex-col gap-2">
-                        {{-- Removed link to admin.bookings.show as it's not defined --}}
-                        {{-- You could link to the public bungalow details instead if desired: --}}
-                        <a href="{{ route('bungalows.show', $booking->bungalow->id) }}" class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center transition duration-200 shadow-sm">
-                            <span data-lucide="eye" class="w-4 h-4 mr-2"></span> Ver Bungalow
-                        </a>
-                    </div>
+                    @forelse ($statusBookings as $booking)
+                        <div class="bg-white rounded-xl shadow-md p-6 mb-6 flex flex-col md:flex-row items-center md:items-start gap-6 hover:shadow-lg transition-shadow duration-200">
+                            <div class="flex-shrink-0">
+                                <img src="{{ asset($booking->bungalow->image_url ?? 'https://placehold.co/200x150/E0E0E0/333333?text=Bungalow') }}"
+                                     alt="{{ $booking->bungalow->name }}"
+                                     class="w-48 h-36 object-cover rounded-lg shadow">
+                            </div>
+                            <div class="flex-grow text-center md:text-left">
+                                <h3 class="text-2xl font-bold text-gray-900 mb-2">{{ $booking->bungalow->name }}</h3>
+                                <p class="text-gray-700 text-lg mb-1">
+                                    <span class="font-semibold">Cliente:</span> {{ $booking->user->name ?? 'N/A' }} (ID: {{ $booking->user_id }})
+                                </p>
+                                <p class="text-gray-700 text-lg mb-1">
+                                    <span class="font-semibold">Email:</span> {{ $booking->user->email ?? 'N/A' }}
+                                </p>
+                                <p class="text-gray-700 text-lg mb-1">
+                                    <span class="font-semibold">Período:</span> {{ \Carbon\Carbon::parse($booking->start_date)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($booking->end_date)->format('d/m/Y') }}
+                                </p>
+                                <p class="text-gray-700 text-lg mb-1">
+                                    <span class="font-semibold">Total:</span> <span class="text-green-600 font-bold">€{{ number_format($booking->total_price, 2, ',', '.') }}</span>
+                                </p>
+                                <p class="text-gray-700 text-lg">
+                                    <span class="font-semibold">Estado:</span>
+                                    @php
+                                        $statusClass = [
+                                            'pending' => 'bg-yellow-100 text-yellow-800',
+                                            'paid' => 'bg-green-100 text-green-800',
+                                            'cancelled' => 'bg-red-100 text-red-800',
+                                            'failed' => 'bg-red-100 text-red-800', // Ensure 'failed' is handled if it's a possible status
+                                        ][$booking->status] ?? 'bg-gray-100 text-gray-800';
+                                    @endphp
+                                    <span class="inline-block px-3 py-1 rounded-full text-sm font-medium {{ $statusClass }}">
+                                        {{ ucfirst($booking->status) }}
+                                    </span>
+                                </p>
+                            </div>
+                            <div class="flex-shrink-0 mt-4 md:mt-0 flex flex-col gap-2">
+                                <a href="{{ route('bungalows.show', $booking->bungalow->id) }}" class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center transition duration-200 shadow-sm">
+                                    <span data-lucide="eye" class="w-4 h-4 mr-2"></span> Ver Bungalow
+                                </a>
+                            </div>
+                        </div>
+                    @empty
+                        {{-- Empty state for each specific status --}}
+                        <div class="bg-blue-50 border border-blue-200 text-blue-700 px-6 py-8 rounded-lg text-center mt-12 shadow-md" role="alert">
+                            <div class="flex flex-col items-center justify-center">
+                                <span class="text-blue-500 mb-4" data-lucide="info" style="width: 48px; height: 48px;"></span>
+                                <p class="text-xl font-semibold mb-2">
+                                    @if ($statusKey === 'paid')
+                                        Nenhuma reserva paga encontrada.
+                                    @elseif ($statusKey === 'pending')
+                                        Nenhuma reserva pendente encontrada.
+                                    @else
+                                        Nenhuma reserva cancelada encontrada.
+                                    @endif
+                                </p>
+                                <p class="text-lg">Não há reservas {{ $statusKey === 'paid' ? 'pagas' : ($statusKey === 'pending' ? 'pendentes' : 'canceladas') }} no momento.</p>
+                            </div>
+                        </div>
+                    @endforelse
                 </div>
-            @empty
+            @endforeach
+
+            {{-- Overall empty state (only if ALL categories are empty) --}}
+            @if ($paidBookings->isEmpty() && $pendingBookings->isEmpty() && $cancelledBookings->isEmpty())
                 <div class="bg-blue-50 border border-blue-200 text-blue-700 px-6 py-8 rounded-lg text-center mt-12 shadow-md" role="alert">
                     <div class="flex flex-col items-center justify-center">
                         <span class="text-blue-500 mb-4" data-lucide="info" style="width: 48px; height: 48px;"></span>
                         <p class="text-xl font-semibold mb-2">Nenhuma reserva encontrada.</p>
-                        <p class="text-lg">Ainda não há reservas no sistema.</p>
+                        <p class="text-lg">Ainda não há reservas de qualquer tipo no sistema.</p>
                     </div>
                 </div>
-            @endforelse
+            @endif
 
             {{-- Pagination commented out as the list might not be paginated without a dedicated admin route --}}
             {{-- <div class="mt-8">

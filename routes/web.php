@@ -32,7 +32,7 @@ Route::middleware('auth')->group(function () {
 
     // Booking related routes
     Route::get('/book/{bungalowId}', [BookingController::class, 'create'])->name('booking.create');
-    Route::post('/book/confirm-and-pay', [BookingController::class, 'confirmAnd_pay'])->name('booking.confirm_and_pay');
+    Route::post('/book/confirm-and-pay', [BookingController::class, 'confirmAndPay'])->name('booking.confirm_and_pay');
     Route::get('/my-reservations', [BookingController::class, 'userBookings'])->name('user.reservations');
 
     // PayPal transaction routes
