@@ -75,7 +75,7 @@ class AdminController extends Controller
             'beds' => 'required|integer|min:0',
             'bathrooms' => 'required|numeric|min:0',
             'accommodates' => 'required|integer|min:1',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image_url' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $imagePath = null;
@@ -126,7 +126,7 @@ class AdminController extends Controller
             'beds' => 'required|integer|min:0',
             'bathrooms' => 'required|numeric|min:0',
             'accommodates' => 'required|integer|min:1',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Image is nullable for updates
+            'image_url' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Image is nullable for updates
         ]);
 
         // Handle image update

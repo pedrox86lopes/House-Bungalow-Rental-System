@@ -4,7 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\BungalowController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\PayPalController;
-use App\Http\Controllers\AdminController; // Make sure this is imported
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\MessageController;
@@ -14,6 +14,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [BungalowController::class, 'index'])->name('root');
 Route::get('/bungalows', [BungalowController::class, 'index'])->name('bungalows.index');
 Route::get('/bungalows/{id}', [BungalowController::class, 'show'])->name('bungalows.show');
+
+// API route to get unavailable dates for a specific bungalow (can be public or authenticated based on needs)
+Route::get('/api/bungalows/{bungalow}/unavailable-dates', [BungalowController::class, 'getUnavailableDates']); // <--- ADD THIS LINE
 
 
 // Auth routes for user registration and login (provided by Laravel Breeze/Jetstream)

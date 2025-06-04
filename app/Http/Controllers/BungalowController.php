@@ -3,8 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bungalow;
+use App\Models\Booking; // <--- ADD THIS LINE
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage; // Make sure to import Storage
+use Illuminate\Support\Facades\Storage;
 
 class BungalowController extends Controller
 {
@@ -15,14 +16,36 @@ class BungalowController extends Controller
     {
         $query = Bungalow::query();
 
-        if ($search = $request->query('search')) {
-            $query->where('name', 'like', '%' . $search . '%')
-                  ->orWhere('description', 'like', '%' . $search . '%');
+        // Handle search filter
+        if ($request->filled('search')) { // Use filled for better check
+            $searchTerm = '%' . $request->input('search') . '%';
+            $query->where('name', 'like', $searchTerm)
+                  ->orWhere('description', 'like', $searchTerm);
         }
 
-        $bungalows = $query->orderBy('name')->get();
+        // Handle date range filter
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
 
-        return view('bungalows.index', compact('bungalows'));
+        if ($startDate && $endDate) {
+            // Eager load bookings relationship with a constraint to filter for the selected date range
+            // This allows us to check for overlaps when iterating through bungalows in the view
+            $query->with(['bookings' => function ($q) use ($startDate, $endDate) {
+                $q->where('start_date', '<', $endDate) // Booking starts before requested end
+                  ->where('end_date', '>', $startDate)   // Booking ends after requested start
+                  ->whereIn('status', ['paid', 'pending']); // Only consider paid or pending bookings as unavailable
+            }]);
+        }
+
+        // Changed from get() to paginate() for better performance with many bungalows
+        $bungalows = $query->orderBy('name')->paginate(10); // Adjust pagination limit as needed
+
+        // Pass the dates back to the view so they can be re-populated in the filter form
+        return view('bungalows.index', [
+            'bungalows' => $bungalows,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+        ]);
     }
 
     /**
@@ -42,11 +65,10 @@ class BungalowController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'required|string',
             'price_per_night' => 'required|numeric|min:0',
-            // Add validation rules for new fields if you've added them to the form
-            'bedrooms' => 'nullable|integer|min:0', // assuming you'll add this to the form
-            'beds' => 'nullable|integer|min:0',     // assuming you'll add this to the form
-            'bathrooms' => 'nullable|numeric|min:0', // assuming you'll add this to the form
-            'accommodates' => 'nullable|integer|min:1', // assuming you'll add this to the form
+            'bedrooms' => 'nullable|integer|min:0',
+            'beds' => 'nullable|integer|min:0',
+            'bathrooms' => 'nullable|numeric|min:0',
+            'accommodates' => 'nullable|integer|min:1',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
@@ -55,19 +77,14 @@ class BungalowController extends Controller
         $bungalow->description = $request->description;
         $bungalow->price_per_night = $request->price_per_night;
 
-        // Assign new fields if they exist in the request
         $bungalow->bedrooms = $request->bedrooms;
         $bungalow->beds = $request->beds;
         $bungalow->bathrooms = $request->bathrooms;
         $bungalow->accommodates = $request->accommodates;
 
         if ($request->hasFile('image')) {
-            // This is the correct way to store files on the 'public' disk
-            // It will save to storage/app/public/bungalows/ and return 'bungalows/filename.jpg'
             $imagePath = $request->file('image')->store('bungalows', 'public');
-
-            // Store the returned path directly in the database. No need for str_replace().
-            $bungalow->image = $imagePath;
+            $bungalow->image_url = $imagePath; // Changed from 'image' to 'image_url' to match your blade
         }
 
         $bungalow->save();
@@ -81,6 +98,9 @@ class BungalowController extends Controller
     public function show($id)
     {
         $bungalow = Bungalow::findOrFail($id);
+        // You might want to pass the date parameters to the show view as well
+        // if you allow direct booking from there.
+        // For simplicity, we'll assume the booking form itself handles passing them from index to create.
         return view('bungalows.show', compact('bungalow'));
     }
 
@@ -91,14 +111,35 @@ class BungalowController extends Controller
     {
         $bungalow = Bungalow::findOrFail($id);
 
-        if ($bungalow->image) {
-            // Delete the image file from the 'public' disk.
-            // The path stored in the database ('bungalows/filename.jpg') is relative to this disk's root.
-            Storage::disk('public')->delete($bungalow->image);
+        if ($bungalow->image_url) { // Changed from 'image' to 'image_url'
+            Storage::disk('public')->delete($bungalow->image_url);
         }
 
         $bungalow->delete();
 
         return redirect()->route('admin.bungalows.index')->with('success', 'Bungalow eliminado com sucesso!');
+    }
+
+    /**
+     * Get unavailable dates for a specific bungalow. (For AJAX use with date pickers)
+     * @param \App\Models\Bungalow $bungalow
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getUnavailableDates(Bungalow $bungalow)
+    {
+        $bookedDates = Booking::where('bungalow_id', $bungalow->id)
+                              ->whereIn('status', ['paid', 'pending'])
+                              ->select('start_date', 'end_date')
+                              ->get();
+
+        $unavailableRanges = [];
+        foreach ($bookedDates as $booking) {
+            $unavailableRanges[] = [
+                'from' => $booking->start_date,
+                'to' => $booking->end_date,
+            ];
+        }
+
+        return response()->json($unavailableRanges);
     }
 }
