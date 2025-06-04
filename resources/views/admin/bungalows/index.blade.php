@@ -65,10 +65,10 @@
                     <a href="{{ route('bungalows.show', $bungalow->id) }}" class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center transition duration-200 shadow-sm">
                         <span data-lucide="eye" class="w-4 h-4 mr-2"></span> Ver Detalhes
                     </a>
-                    {{-- Optional: Edit button --}}
-                    {{-- <a href="{{ route('admin.bungalows.edit', $bungalow->id) }}" class="px-5 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 flex items-center justify-center transition duration-200 shadow-sm">
+                    {{-- UNCOMMENT AND USE THIS EDIT BUTTON --}}
+                    <a href="{{ route('admin.bungalows.edit', $bungalow->id) }}" class="px-5 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 flex items-center justify-center transition duration-200 shadow-sm">
                         <span data-lucide="edit" class="w-4 h-4 mr-2"></span> Editar
-                    </a> --}}
+                    </a>
                     <form action="{{ route('admin.bungalows.destroy', $bungalow->id) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja eliminar este bungalow? Esta ação não pode ser desfeita.');">
                         @csrf
                         @method('DELETE')

@@ -32,16 +32,14 @@ Route::middleware('auth')->group(function () {
 
     // Booking related routes
     Route::get('/book/{bungalowId}', [BookingController::class, 'create'])->name('booking.create');
-    Route::post('/book/confirm-and-pay', [BookingController::class, 'confirmAndPay'])->name('booking.confirm_and_pay'); // Corrected method name here
+    Route::post('/book/confirm-and-pay', [BookingController::class, 'confirmAndPay'])->name('booking.confirm_and_pay');
     Route::get('/my-reservations', [BookingController::class, 'userBookings'])->name('user.reservations');
 
     // PayPal transaction routes
     Route::prefix('transaction')->name('transaction.')->group(function () {
-        // Route::get('/', [PayPalController::class, 'createTransaction'])->name('create'); // This route might be unused or for different flow
         Route::get('/process', [PayPalController::class, 'processTransaction'])->name('process');
         Route::get('/success', [PayPalController::class, 'successTransaction'])->name('success');
         Route::get('/cancel', [PayPalController::class, 'cancelTransaction'])->name('cancel');
-        // Route::get('/finish', [PayPalController::class, 'finishTransaction'])->name('finish'); // This route might be unused or for different flow
     });
 
     // Admin Dashboard and related routes - Restricted to ADMIN_EMAIL via middleware
@@ -49,18 +47,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
         // New Bungalow Management Routes for Admin
-        // Route to show a list of bungalows in the admin panel
         Route::get('/bungalows', [AdminController::class, 'bungalowsIndex'])->name('bungalows.index');
-        // Route to show the form for creating a new bungalow
         Route::get('/bungalows/create', [AdminController::class, 'createBungalow'])->name('bungalows.create');
-        // Route to store a newly created bungalow
         Route::post('/bungalows', [AdminController::class, 'storeBungalow'])->name('bungalows.store');
-        // Route to delete a bungalow
         Route::delete('/bungalows/{id}', [AdminController::class, 'destroyBungalow'])->name('bungalows.destroy');
-        // Optional: Route to edit a bungalow
-        // Route::get('/bungalows/{id}/edit', [AdminController::class, 'editBungalow'])->name('bungalows.edit');
-        // Optional: Route to update a bungalow
-        // Route::put('/bungalows/{id}', [AdminController::class, 'updateBungalow'])->name('bungalows.update');
+
+        // --- UNCOMMENT AND USE THESE EDIT/UPDATE ROUTES ---
+        Route::get('/bungalows/{id}/edit', [AdminController::class, 'editBungalow'])->name('bungalows.edit');
+        Route::put('/bungalows/{id}', [AdminController::class, 'updateBungalow'])->name('bungalows.update');
+        // --- END UNCOMMENTED ROUTES ---
     });
 
 
