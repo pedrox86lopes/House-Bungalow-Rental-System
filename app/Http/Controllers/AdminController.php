@@ -71,20 +71,33 @@ class AdminController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'required|string',
             'price_per_night' => 'required|numeric|min:0',
+            // --- ADD NEW FIELD VALIDATION RULES HERE ---
+            'bedrooms' => 'required|integer|min:0',
+            'beds' => 'required|integer|min:0',
+            'bathrooms' => 'required|numeric|min:0', // Use numeric for bathrooms if step="0.5"
+            'accommodates' => 'required|integer|min:1',
+            // --- END NEW FIELD VALIDATION RULES ---
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Max 2MB
         ]);
 
         $imagePath = null;
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('bungalow_images', 'public'); // Stores in storage/app/public/bungalow_images
+            // Stores in storage/app/public/bungalow_images and returns path like 'bungalow_images/filename.jpg'
+            $imagePath = $request->file('image')->store('bungalow_images', 'public');
         }
 
+        // --- ADD NEW FIELDS TO THE CREATE ARRAY HERE ---
         Bungalow::create([
             'name' => $request->name,
             'description' => $request->description,
             'price_per_night' => $request->price_per_night,
-            'image_url' => $imagePath, // Save the path relative to storage/app/public
+            'bedrooms' => $request->bedrooms,       // Add this line
+            'beds' => $request->beds,               // Add this line
+            'bathrooms' => $request->bathrooms,     // Add this line
+            'accommodates' => $request->accommodates, // Add this line
+            'image_url' => $imagePath, // This matches your model's $fillable 'image_url'
         ]);
+        // --- END NEW FIELDS TO THE CREATE ARRAY ---
 
         return redirect()->route('admin.bungalows.index')->with('success', 'Bungalow adicionado com sucesso!');
     }
