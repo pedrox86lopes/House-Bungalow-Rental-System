@@ -3,20 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
-use App\Models\Bungalow;
+use App\Models\Bungalow; // Make sure Bungalow model is imported
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage; // For file operations
 
 class AdminController extends Controller
 {
     public function dashboard()
     {
-        // Fetch statistics for the overview cards
         $totalBookings = Booking::count();
         $totalUsers = User::count();
         $activeBungalows = Bungalow::count();
 
-        // Fetch bookings categorized by their status
         $paidBookings = Booking::with(['user', 'bungalow'])
                                ->where('status', 'paid')
                                ->latest()
@@ -32,7 +31,6 @@ class AdminController extends Controller
                                    ->latest()
                                    ->get();
 
-        // Ensure these are passed to the view using compact()
         return view('admin.dashboard', compact(
             'totalBookings',
             'activeBungalows',
@@ -42,4 +40,73 @@ class AdminController extends Controller
             'cancelledBookings'
         ));
     }
+
+    /**
+     * Display a list of bungalows for admin to manage.
+     * @return \Illuminate\View\View
+     */
+    public function bungalowsIndex()
+    {
+        $bungalows = Bungalow::orderBy('created_at', 'desc')->get();
+        return view('admin.bungalows.index', compact('bungalows'));
+    }
+
+    /**
+     * Show the form for creating a new bungalow.
+     * @return \Illuminate\View\View
+     */
+    public function createBungalow()
+    {
+        return view('admin.bungalows.create');
+    }
+
+    /**
+     * Store a newly created bungalow in storage.
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function storeBungalow(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'required|string',
+            'price_per_night' => 'required|numeric|min:0',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Max 2MB
+        ]);
+
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('bungalow_images', 'public'); // Stores in storage/app/public/bungalow_images
+        }
+
+        Bungalow::create([
+            'name' => $request->name,
+            'description' => $request->description,
+            'price_per_night' => $request->price_per_night,
+            'image_url' => $imagePath, // Save the path relative to storage/app/public
+        ]);
+
+        return redirect()->route('admin.bungalows.index')->with('success', 'Bungalow adicionado com sucesso!');
+    }
+
+    /**
+     * Remove the specified bungalow from storage.
+     * @param  int  $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function destroyBungalow($id)
+    {
+        $bungalow = Bungalow::findOrFail($id);
+
+        // Delete associated image if it exists
+        if ($bungalow->image_url && Storage::disk('public')->exists($bungalow->image_url)) {
+            Storage::disk('public')->delete($bungalow->image_url);
+        }
+
+        $bungalow->delete();
+
+        return redirect()->route('admin.bungalows.index')->with('success', 'Bungalow eliminado com sucesso!');
+    }
+
+    // You can add editBungalow and updateBungalow methods here if you want to implement editing.
 }

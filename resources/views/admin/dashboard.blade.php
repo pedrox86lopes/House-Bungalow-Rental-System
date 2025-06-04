@@ -28,6 +28,13 @@
                             Dashboard
                         </a>
                     </li>
+                    {{-- New Bungalow Management Link --}}
+                    <li class="mb-3">
+                        <a href="{{ route('admin.bungalows.index') }}" class="flex items-center text-gray-700 hover:text-blue-600 font-medium py-2 px-3 rounded-lg hover:bg-blue-50 transition duration-200">
+                            <span data-lucide="home" class="w-5 h-5 mr-3"></span>
+                            Gerir Bungalows
+                        </a>
+                    </li>
                     <li class="mb-3">
                         {{-- Linking to user's general message inbox --}}
                         <a href="{{ route('messages.index') }}" class="flex items-center text-gray-700 hover:text-blue-600 font-medium py-2 px-3 rounded-lg hover:bg-blue-50 transition duration-200">
@@ -66,12 +73,10 @@
                 </div>
             </div>
 
-            ---
+            <hr class="my-10 border-gray-300">
 
             {{-- Reservations Grouped by Status --}}
-            {{-- Using the variables passed directly from the AdminController --}}
             @php
-                // Create an array for easy iteration, ensuring keys match the display logic below
                 $allBookingsGrouped = [
                     'paid' => $paidBookings,
                     'pending' => $pendingBookings,
@@ -120,7 +125,7 @@
                                             'pending' => 'bg-yellow-100 text-yellow-800',
                                             'paid' => 'bg-green-100 text-green-800',
                                             'cancelled' => 'bg-red-100 text-red-800',
-                                            'failed' => 'bg-red-100 text-red-800', // Ensure 'failed' is handled if it's a possible status
+                                            'failed' => 'bg-red-100 text-red-800',
                                         ][$booking->status] ?? 'bg-gray-100 text-gray-800';
                                     @endphp
                                     <span class="inline-block px-3 py-1 rounded-full text-sm font-medium {{ $statusClass }}">
