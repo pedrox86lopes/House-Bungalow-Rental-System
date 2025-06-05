@@ -41,7 +41,7 @@ class PayPalController extends Controller
                 [
                     "amount" => [
                         "currency_code" => "EUR",
-                        "value" => number_format($booking->total_price, 2, '.', ''),
+                        "value" => number_format($booking->total_amount, 2, '.', ''),
                     ],
                     "description" => "Aluguel de " . $booking->bungalow->name . " de " . $booking->start_date . " a " . $booking->end_date,
                 ]

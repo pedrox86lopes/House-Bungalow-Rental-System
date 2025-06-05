@@ -48,7 +48,7 @@
 
         {{-- Main Content Area --}}
         <main class="md:col-span-3">
-            {{-- Dashboard Overview (Example Data - Replace with actual counts from AdminController) --}}
+            {{-- Dashboard Overview --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
                 <div class="bg-white p-6 rounded-lg shadow-md flex items-center justify-between">
                     <div>
@@ -116,7 +116,7 @@
                                     <span class="font-semibold">Período:</span> {{ \Carbon\Carbon::parse($booking->start_date)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($booking->end_date)->format('d/m/Y') }}
                                 </p>
                                 <p class="text-gray-700 text-lg mb-1">
-                                    <span class="font-semibold">Total:</span> <span class="text-green-600 font-bold">€{{ number_format($booking->total_price, 2, ',', '.') }}</span>
+                                    <span class="font-semibold">Total:</span> <span class="text-green-600 font-bold">€{{ number_format($booking->total_amount, 2, ',', '.') }}</span>
                                 </p>
                                 <p class="text-gray-700 text-lg">
                                     <span class="font-semibold">Estado:</span>

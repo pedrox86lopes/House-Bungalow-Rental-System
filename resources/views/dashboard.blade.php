@@ -219,10 +219,10 @@
                                                 {{ \Carbon\Carbon::parse($booking->end_date)->format('d/m/Y') }}
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                                                {{ \Carbon\Carbon::parse($booking->start_date)->diffInDays(\Carbon\Carbon::parse($booking->end_date)) }}
+                                                {{ $booking->number_of_nights }} {{-- Using the accessor --}}
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                                                €{{ number_format($booking->total_price, 2, ',', '.') }}
+                                                €{{ number_format($booking->total_amount, 2, ',', '.') }}
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm">
                                                 @php
@@ -238,7 +238,10 @@
                                                 </span>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                <a href="{{ route('bungalows.show', $booking->bungalow_id) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-200">Ver Bungalow</a>
+                                                <a href="{{ route('bungalows.show', $booking->bungalow_id) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-200 mr-4">Ver Bungalow</a>
+                                                @if ($booking->status === 'paid')
+                                                    <a href="{{ route('bookings.invoice.download', $booking) }}" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-200">Download Fatura</a>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach

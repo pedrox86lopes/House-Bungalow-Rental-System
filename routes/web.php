@@ -2,12 +2,13 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\BungalowController;
-use App\Http\Controllers\BookingController;
+use App\Http\Controllers\BookingController; // Make sure to use BookingController
 use App\Http\Controllers\PayPalController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\InvoiceController; // <--- ADD THIS LINE
 use Illuminate\Support\Facades\Route;
 
 // Publicly accessible Bungalow routes
@@ -16,7 +17,7 @@ Route::get('/bungalows', [BungalowController::class, 'index'])->name('bungalows.
 Route::get('/bungalows/{id}', [BungalowController::class, 'show'])->name('bungalows.show');
 
 // API route to get unavailable dates for a specific bungalow (can be public or authenticated based on needs)
-Route::get('/api/bungalows/{bungalow}/unavailable-dates', [BungalowController::class, 'getUnavailableDates']); // <--- ADD THIS LINE
+Route::get('/api/bungalows/{bungalow}/unavailable-dates', [BungalowController::class, 'getUnavailableDates']);
 
 
 // Auth routes for user registration and login (provided by Laravel Breeze/Jetstream)
@@ -75,4 +76,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/send/{receiver}', [MessageController::class, 'store'])->name('store'); // Store message
         Route::get('/{message}', [MessageController::class, 'show'])->name('show'); // View a specific message
     });
+
+    // <--- ADD THESE INVOICE ROUTES ---
+    // Route to download a specific invoice (using 'booking' as the route model binding name)
+    Route::get('/bookings/{booking}/invoice/download', [InvoiceController::class, 'downloadInvoice'])
+        ->name('bookings.invoice.download');
+    // <--- END ADDED INVOICE ROUTES ---
 });

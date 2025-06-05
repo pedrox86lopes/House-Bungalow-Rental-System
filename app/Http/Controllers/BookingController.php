@@ -4,12 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Bungalow;
 use App\Models\Booking;
-use App\Models\Message; // <--- ADD THIS LINE
-use App\Models\User;    // <--- ADD THIS LINE
+use App\Models\Message;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;       // <--- ADD THIS LINE for date formatting
+use Carbon\Carbon;
 
 class BookingController extends Controller
 {
@@ -30,7 +30,7 @@ class BookingController extends Controller
             'bungalow_id' => 'required|exists:bungalows,id',
             'start_date' => 'required|date|after_or_equal:today',
             'end_date' => 'required|date|after:start_date',
-            'total_price' => 'required|numeric|min:0.01',
+            'total_amount' => 'required|numeric|min:0.01', // <--- CHANGED THIS LINE
         ]);
 
         try {
@@ -44,29 +44,29 @@ class BookingController extends Controller
             $endDate = new \DateTime($request->end_date);
             $interval = $startDate->diff($endDate);
             $calculatedNights = $interval->days;
-            $calculatedTotalPrice = $calculatedNights * $bungalow->price_per_night;
+            $calculatedTotalAmount = $calculatedNights * $bungalow->price_per_night; // <--- CHANGED VARIABLE NAME
 
-            if (abs($calculatedTotalPrice - $request->total_price) > 0.01) {
-                Log::warning("Price mismatch for booking. Client sent {$request->total_price}, server calculated {$calculatedTotalPrice}. Bungalow ID: {$bungalow->id}");
+            if (abs($calculatedTotalAmount - $request->total_amount) > 0.01) { // <--- CHANGED THIS LINE
+                Log::warning("Price mismatch for booking. Client sent {$request->total_amount}, server calculated {$calculatedTotalAmount}. Bungalow ID: {$bungalow->id}"); // <--- CHANGED THIS LINE
                 return response()->json(['message' => 'Erro de validação de preço. Por favor, tente novamente.'], 422);
             }
 
             // --- NEW AVAILABILITY CHECK IS HERE ---
             $existingBooking = Booking::where('bungalow_id', $bungalow->id)
-                                        ->where(function ($query) use ($startDate, $endDate) {
-                                            $query->where(function ($q) use ($startDate, $endDate) {
-                                                $q->where('start_date', '<', $endDate->format('Y-m-d'))
-                                                  ->where('end_date', '>', $startDate->format('Y-m-d'));
-                                            })
-                                            // Consider pending bookings as well for availability
-                                            ->orWhere(function ($q) use ($startDate, $endDate) {
-                                                $q->where('status', 'pending')
-                                                  ->where('start_date', '<', $endDate->format('Y-m-d'))
-                                                  ->where('end_date', '>', $startDate->format('Y-m-d'));
-                                            });
-                                        })
-                                        ->whereIn('status', ['paid', 'pending'])
-                                        ->first();
+                ->where(function ($query) use ($startDate, $endDate) {
+                    $query->where(function ($q) use ($startDate, $endDate) {
+                        $q->where('start_date', '<', $endDate->format('Y-m-d'))
+                            ->where('end_date', '>', $startDate->format('Y-m-d'));
+                    })
+                        // Consider pending bookings as well for availability
+                        ->orWhere(function ($q) use ($startDate, $endDate) {
+                            $q->where('status', 'pending')
+                                ->where('start_date', '<', $endDate->format('Y-m-d'))
+                                ->where('end_date', '>', $startDate->format('Y-m-d'));
+                        });
+                })
+                ->whereIn('status', ['paid', 'pending'])
+                ->first();
 
             if ($existingBooking) {
                 return response()->json(['message' => 'Este bungalow não está disponível para as datas selecionadas. Por favor, escolha outras datas.'], 409);
@@ -78,7 +78,7 @@ class BookingController extends Controller
                 'bungalow_id' => $bungalow->id,
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,
-                'total_price' => $calculatedTotalPrice,
+                'total_amount' => $calculatedTotalAmount, // <--- CHANGED THIS LINE
                 'status' => 'pending', // Initial status
                 'guest_name' => Auth::user()->name,
                 'guest_email' => Auth::user()->email,
@@ -95,7 +95,6 @@ class BookingController extends Controller
                 'message' => 'Reserva criada com sucesso. Redirecionando para o pagamento.',
                 'redirect_url' => $paypalRedirectUrl
             ]);
-
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'message' => 'Erro de validação: ' . $e->getMessage(),
@@ -114,9 +113,9 @@ class BookingController extends Controller
         }
 
         $bookings = Booking::where('user_id', Auth::id())
-                            ->with('bungalow')
-                            ->orderBy('start_date', 'asc')
-                            ->get();
+            ->with('bungalow')
+            ->orderBy('start_date', 'asc')
+            ->get();
 
         return view('bookings.user_bookings', compact('bookings'));
     }
@@ -142,25 +141,25 @@ class BookingController extends Controller
         $bungalowName = $booking->bungalow->name;
         $checkInDate = Carbon::parse($booking->start_date)->format('d/m/Y');
         $checkOutDate = Carbon::parse($booking->end_date)->format('d/m/Y');
-        $totalPrice = number_format($booking->total_price, 2);
+        $totalAmount = number_format($booking->total_amount, 2); // <--- CHANGED THIS LINE
 
         switch ($status) {
             case 'pending':
                 $subject = "Reserva #{$booking->id} para {$bungalowName} - Pagamento Pendente";
-                $body = "Olá {$booking->user->name},\n\nA sua reserva para o bungalow '{$bungalowName}' de {$checkInDate} a {$checkOutDate} (Total: €{$totalPrice}) foi registada como PENDENTE de pagamento.\n\nPor favor, complete o pagamento para confirmar a sua reserva.\n\nAtenciosamente,\nA Equipa de Reservas";
+                $body = "Olá {$booking->user->name},\n\nA sua reserva para o bungalow '{$bungalowName}' de {$checkInDate} a {$checkOutDate} (Total: €{$totalAmount}) foi registada como PENDENTE de pagamento.\n\nPor favor, complete o pagamento para confirmar a sua reserva.\n\nAtenciosamente,\nA Equipa de Reservas";
                 break;
             case 'paid':
                 $subject = "Confirmação de Reserva #{$booking->id} - {$bungalowName}";
-                $body = "Olá {$booking->user->name},\n\nA sua reserva para o bungalow '{$bungalowName}' de {$checkInDate} a {$checkOutDate} (Total: €{$totalPrice}) foi CONFIRMADA e o pagamento processado com sucesso.\n\nAguardamos a sua estadia!\n\nAtenciosamente,\nA Equipa de Reservas";
+                $body = "Olá {$booking->user->name},\n\nA sua reserva para o bungalow '{$bungalowName}' de {$checkInDate} a {$checkOutDate} (Total: €{$totalAmount}) foi CONFIRMADA e o pagamento processado com sucesso.\n\nAguardamos a sua estadia!\n\nAtenciosamente,\nA Equipa de Reservas";
                 break;
             case 'cancelled':
                 $subject = "Reserva #{$booking->id} para {$bungalowName} - Cancelada";
-                $body = "Olá {$booking->user->name},\n\nA sua reserva para o bungalow '{$bungalowName}' de {$checkInDate} a {$checkOutDate} (Total: €{$totalPrice}) foi CANCELADA com sucesso.\n\nSe tiver alguma dúvida, por favor, contacte-nos.\n\nAtenciosamente,\nA Equipa de Reservas";
+                $body = "Olá {$booking->user->name},\n\nA sua reserva para o bungalow '{$bungalowName}' de {$checkInDate} a {$checkOutDate} (Total: €{$totalAmount}) foi CANCELADA com sucesso.\n\nSe tiver alguma dúvida, por favor, contacte-nos.\n\nAtenciosamente,\nA Equipa de Reservas";
                 break;
             default:
                 // Fallback for unknown status
                 $subject = "Atualização da Reserva #{$booking->id} para {$bungalowName}";
-                $body = "Olá {$booking->user->name},\n\nA sua reserva para o bungalow '{$bungalowName}' de {$checkInDate} a {$checkOutDate} (Total: €{$totalPrice}) tem um novo estado: {$status}.\n\nAtenciosamente,\nA Equipa de Reservas";
+                $body = "Olá {$booking->user->name},\n\nA sua reserva para o bungalow '{$bungalowName}' de {$checkInDate} a {$checkOutDate} (Total: €{$totalAmount}) tem um novo estado: {$status}.\n\nAtenciosamente,\nA Equipa de Reservas";
                 break;
         }
 
@@ -174,25 +173,5 @@ class BookingController extends Controller
         Log::info("Sent internal message to user {$booking->user_id} for booking {$booking->id} with status '{$status}'.");
     }
 
-    // --- You will also need to add calls to sendMessageToUserAboutBooking
-    // --- in other methods where booking status changes, e.g.,
-    // --- a method that handles successful PayPal payments (status to 'paid')
-    // --- and a method that handles cancellations (status to 'cancelled').
-    // --- Example (placeholder - you'll integrate this into your actual payment/cancellation logic):
-
-    // public function handlePaymentSuccess(Request $request, Booking $booking)
-    // {
-    //     // ... existing payment processing logic ...
-    //     $booking->update(['status' => 'paid', 'paypal_transaction_id' => $transactionId]);
-    //     $this->sendMessageToUserAboutBooking($booking, 'paid');
-    //     // ... redirect or return response ...
-    // }
-
-    // public function cancelBooking(Booking $booking)
-    // {
-    //     // ... existing cancellation logic ...
-    //     $booking->update(['status' => 'cancelled']);
-    //     $this->sendMessageToUserAboutBooking($booking, 'cancelled');
-    //     // ... redirect or return response ...
-    // }
+    // ... (rest of your controller) ...
 }

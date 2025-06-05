@@ -140,5 +140,7 @@ return [
     env('ADMIN_EMAIL', 'admin@example.com')
     ],
 
+    'default_tax_rate' => 23.00, // Example for Portugal's IVA
+
 
 ];
