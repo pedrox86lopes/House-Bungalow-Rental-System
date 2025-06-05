@@ -33,6 +33,7 @@ class AdminAccessMiddleware
         }
 
         // If not the admin, redirect or abort
-        abort(403, 'Unauthorized access.'); // Or redirect to a different page, e.g., return redirect('/dashboard');
-    }
+        // abort(403, 'Unauthorized access.'); // Or redirect to a different page, e.g., return redirect('/dashboard');
+        return redirect('/dashboard')->with('error', 'Acesso não autorizado.'); // Redirect to dashboard with error message
+        }
 }
