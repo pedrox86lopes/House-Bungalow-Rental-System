@@ -12,8 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // Add the 'is_admin' column, boolean type, default to false
-            $table->boolean('is_admin')->default(false)->after('email'); // You can place it after any column you prefer
+            // Add the 'is_admin' column as a boolean, default to false
+            // after the 'email' column (or any other appropriate place)
+            $table->boolean('is_admin')->default(false)->after('email');
         });
     }
 

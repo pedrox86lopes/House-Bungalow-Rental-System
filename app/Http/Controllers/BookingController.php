@@ -4,13 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\Bungalow;
 use App\Models\Booking;
+use App\Models\Message; // <--- ADD THIS LINE
+use App\Models\User;    // <--- ADD THIS LINE
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;       // <--- ADD THIS LINE for date formatting
 
 class BookingController extends Controller
 {
-    public function create(Request $request, $bungalowId) // Add Request $request
+    public function create(Request $request, $bungalowId)
     {
         $bungalow = Bungalow::findOrFail($bungalowId);
 
@@ -62,11 +65,11 @@ class BookingController extends Controller
                                                   ->where('end_date', '>', $startDate->format('Y-m-d'));
                                             });
                                         })
-                                        ->whereIn('status', ['paid', 'pending']) // Only check 'paid' and 'pending' bookings
+                                        ->whereIn('status', ['paid', 'pending'])
                                         ->first();
 
             if ($existingBooking) {
-                return response()->json(['message' => 'Este bungalow não está disponível para as datas selecionadas. Por favor, escolha outras datas.'], 409); // 409 Conflict
+                return response()->json(['message' => 'Este bungalow não está disponível para as datas selecionadas. Por favor, escolha outras datas.'], 409);
             }
             // --- END NEW AVAILABILITY CHECK ---
 
@@ -76,12 +79,15 @@ class BookingController extends Controller
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,
                 'total_price' => $calculatedTotalPrice,
-                'status' => 'pending',
+                'status' => 'pending', // Initial status
                 'guest_name' => Auth::user()->name,
                 'guest_email' => Auth::user()->email,
                 'check_in' => $request->start_date,
                 'check_out' => $request->end_date,
             ]);
+
+            // --- Send message for PENDING booking ---
+            $this->sendMessageToUserAboutBooking($booking, 'pending');
 
             $paypalRedirectUrl = route('transaction.process', ['bookingId' => $booking->id]);
 
@@ -114,4 +120,79 @@ class BookingController extends Controller
 
         return view('bookings.user_bookings', compact('bookings'));
     }
+
+    /**
+     * Helper function to send an internal message to the user about their booking.
+     *
+     * @param Booking $booking The booking instance.
+     * @param string $status The new status of the booking ('pending', 'paid', 'cancelled').
+     * @return void
+     */
+    private function sendMessageToUserAboutBooking(Booking $booking, string $status)
+    {
+        $sender = User::where('is_admin', true)->first(); // Assuming you have an admin user. Adjust as needed.
+
+        if (!$sender) {
+            Log::error("No admin user found to send booking messages.");
+            return; // Exit if no admin sender is found
+        }
+
+        $subject = '';
+        $body = '';
+        $bungalowName = $booking->bungalow->name;
+        $checkInDate = Carbon::parse($booking->start_date)->format('d/m/Y');
+        $checkOutDate = Carbon::parse($booking->end_date)->format('d/m/Y');
+        $totalPrice = number_format($booking->total_price, 2);
+
+        switch ($status) {
+            case 'pending':
+                $subject = "Reserva #{$booking->id} para {$bungalowName} - Pagamento Pendente";
+                $body = "Olá {$booking->user->name},\n\nA sua reserva para o bungalow '{$bungalowName}' de {$checkInDate} a {$checkOutDate} (Total: €{$totalPrice}) foi registada como PENDENTE de pagamento.\n\nPor favor, complete o pagamento para confirmar a sua reserva.\n\nAtenciosamente,\nA Equipa de Reservas";
+                break;
+            case 'paid':
+                $subject = "Confirmação de Reserva #{$booking->id} - {$bungalowName}";
+                $body = "Olá {$booking->user->name},\n\nA sua reserva para o bungalow '{$bungalowName}' de {$checkInDate} a {$checkOutDate} (Total: €{$totalPrice}) foi CONFIRMADA e o pagamento processado com sucesso.\n\nAguardamos a sua estadia!\n\nAtenciosamente,\nA Equipa de Reservas";
+                break;
+            case 'cancelled':
+                $subject = "Reserva #{$booking->id} para {$bungalowName} - Cancelada";
+                $body = "Olá {$booking->user->name},\n\nA sua reserva para o bungalow '{$bungalowName}' de {$checkInDate} a {$checkOutDate} (Total: €{$totalPrice}) foi CANCELADA com sucesso.\n\nSe tiver alguma dúvida, por favor, contacte-nos.\n\nAtenciosamente,\nA Equipa de Reservas";
+                break;
+            default:
+                // Fallback for unknown status
+                $subject = "Atualização da Reserva #{$booking->id} para {$bungalowName}";
+                $body = "Olá {$booking->user->name},\n\nA sua reserva para o bungalow '{$bungalowName}' de {$checkInDate} a {$checkOutDate} (Total: €{$totalPrice}) tem um novo estado: {$status}.\n\nAtenciosamente,\nA Equipa de Reservas";
+                break;
+        }
+
+        Message::create([
+            'sender_id'     => $sender->id,
+            'receiver_id'   => $booking->user_id,
+            'subject'       => $subject,
+            'body'          => $body,
+        ]);
+
+        Log::info("Sent internal message to user {$booking->user_id} for booking {$booking->id} with status '{$status}'.");
+    }
+
+    // --- You will also need to add calls to sendMessageToUserAboutBooking
+    // --- in other methods where booking status changes, e.g.,
+    // --- a method that handles successful PayPal payments (status to 'paid')
+    // --- and a method that handles cancellations (status to 'cancelled').
+    // --- Example (placeholder - you'll integrate this into your actual payment/cancellation logic):
+
+    // public function handlePaymentSuccess(Request $request, Booking $booking)
+    // {
+    //     // ... existing payment processing logic ...
+    //     $booking->update(['status' => 'paid', 'paypal_transaction_id' => $transactionId]);
+    //     $this->sendMessageToUserAboutBooking($booking, 'paid');
+    //     // ... redirect or return response ...
+    // }
+
+    // public function cancelBooking(Booking $booking)
+    // {
+    //     // ... existing cancellation logic ...
+    //     $booking->update(['status' => 'cancelled']);
+    //     $this->sendMessageToUserAboutBooking($booking, 'cancelled');
+    //     // ... redirect or return response ...
+    // }
 }

@@ -24,7 +24,7 @@ class MessageController extends Controller
      */
     public function create(User $receiver, Request $request)
     {
-        // Prevent sending message to self (optional)
+        // Prevent sending message to self
         if (Auth::id() === $receiver->id) {
             return redirect()->back()->with('error', 'Não pode enviar mensagens para si próprio.');
         }
