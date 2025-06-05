@@ -46,7 +46,7 @@
                         <label for="date_range" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Datas de Estadia</label>
                         <input type="text"
                                id="date_range"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-sm dark:bg-gray-700 dark:border-gray-700 dark:text-gray-100"
                                placeholder="Selecione as datas"
                                value="{{ $startDate && $endDate ? $startDate . ' to ' . $endDate : '' }}"
                                data-start-date="{{ $startDate }}"
@@ -78,6 +78,15 @@
                             // The `bookings` relationship was eager-loaded with the date constraint in the controller
                             $isReserved = $bungalow->bookings->isNotEmpty();
                         }
+
+                        // Determine the URL parameters to pass to the booking page
+                        $bookingParams = [];
+                        if ($startDate) {
+                            $bookingParams['start_date'] = $startDate;
+                        }
+                        if ($endDate) {
+                            $bookingParams['end_date'] = $endDate;
+                        }
                     @endphp
                     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transition-transform duration-300 ease-in-out hover:scale-105 {{ $isReserved ? 'border-2 border-red-500 opacity-70' : '' }}">
                         @if($bungalow->image_url)
@@ -102,8 +111,8 @@
                                         Indisponível
                                     </button>
                                 @else
-                                    {{-- Pass selected dates as query parameters --}}
-                                    <a href="{{ route('bungalows.show', $bungalow->id) }}?start_date={{ $startDate }}&end_date={{ $endDate }}"
+                                    {{-- Pass selected dates as query parameters to booking.create --}}
+                                    <a href="{{ route('booking.create', $bungalow->id) }}?{{ http_build_query($bookingParams) }}"
                                        class="block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg text-center transition-all duration-300 ease-in-out shadow-md">
                                         Ver Detalhes e Reservar
                                     </a>
