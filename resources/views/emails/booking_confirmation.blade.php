@@ -12,7 +12,7 @@ Agradecemos a sua reserva! Os detalhes da sua estadia são os seguintes:
 * **Datas da Reserva:** De {{ \Carbon\Carbon::parse($booking->start_date)->format('d/m/Y') }} a {{ \Carbon\Carbon::parse($booking->end_date)->format('d/m/Y') }}
 * **Noites:** {{ \Carbon\Carbon::parse($booking->start_date)->diffInDays(\Carbon\Carbon::parse($booking->end_date)) }}
 * **Preço por Noite:** €{{ number_format($booking->bungalow->price_per_night, 2) }}
-* **Total Pago:** €{{ number_format($booking->total_price, 2) }}
+* **Total Pago:** €{{ number_format($booking->total_amount, 2) }}
 * **Status do Pagamento:** {{ ucfirst($booking->payment_status) }}
 @if($booking->paypal_transaction_id)
 * **ID da Transação PayPal:** {{ $booking->paypal_transaction_id }}

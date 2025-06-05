@@ -129,7 +129,7 @@ class PayPalController extends Controller
         $bungalowName = $booking->bungalow->name;
         $checkInDate = Carbon::parse($booking->start_date)->format('d/m/Y');
         $checkOutDate = Carbon::parse($booking->end_date)->format('d/m/Y');
-        $totalPrice = number_format($booking->total_price, 2);
+        $totalPrice = number_format($booking->total_amount, 2);
 
         switch ($status) {
             case 'pending':

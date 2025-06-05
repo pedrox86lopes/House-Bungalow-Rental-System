@@ -58,7 +58,7 @@
                                                 {{ \Carbon\Carbon::parse($booking->start_date)->diffInDays(\Carbon\Carbon::parse($booking->end_date)) }}
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                                                €{{ number_format($booking->total_price, 2, ',', '.') }}
+                                                €{{ number_format($booking->total_amount, 2, ',', '.') }}
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm">
                                                 @php

@@ -53,20 +53,20 @@ class BookingController extends Controller
 
             // --- NEW AVAILABILITY CHECK IS HERE ---
             $existingBooking = Booking::where('bungalow_id', $bungalow->id)
-                ->where(function ($query) use ($startDate, $endDate) {
-                    $query->where(function ($q) use ($startDate, $endDate) {
-                        $q->where('start_date', '<', $endDate->format('Y-m-d'))
-                            ->where('end_date', '>', $startDate->format('Y-m-d'));
-                    })
-                        // Consider pending bookings as well for availability
-                        ->orWhere(function ($q) use ($startDate, $endDate) {
-                            $q->where('status', 'pending')
-                                ->where('start_date', '<', $endDate->format('Y-m-d'))
-                                ->where('end_date', '>', $startDate->format('Y-m-d'));
-                        });
-                })
-                ->whereIn('status', ['paid', 'pending'])
-                ->first();
+                                        ->where(function ($query) use ($startDate, $endDate) {
+                                            $query->where(function ($q) use ($startDate, $endDate) {
+                                                $q->where('start_date', '<', $endDate->format('Y-m-d'))
+                                                  ->where('end_date', '>', $startDate->format('Y-m-d'));
+                                            })
+                                            // Consider pending bookings as well for availability
+                                            ->orWhere(function ($q) use ($startDate, $endDate) {
+                                                $q->where('status', 'pending')
+                                                  ->where('start_date', '<', $endDate->format('Y-m-d'))
+                                                  ->where('end_date', '>', $startDate->format('Y-m-d'));
+                                            });
+                                        })
+                                        ->whereIn('status', ['paid', 'pending'])
+                                        ->first();
 
             if ($existingBooking) {
                 return response()->json(['message' => 'Este bungalow não está disponível para as datas selecionadas. Por favor, escolha outras datas.'], 409);
@@ -95,6 +95,7 @@ class BookingController extends Controller
                 'message' => 'Reserva criada com sucesso. Redirecionando para o pagamento.',
                 'redirect_url' => $paypalRedirectUrl
             ]);
+
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'message' => 'Erro de validação: ' . $e->getMessage(),
@@ -113,9 +114,9 @@ class BookingController extends Controller
         }
 
         $bookings = Booking::where('user_id', Auth::id())
-            ->with('bungalow')
-            ->orderBy('start_date', 'asc')
-            ->get();
+                            ->with('bungalow')
+                            ->orderBy('start_date', 'asc')
+                            ->get();
 
         return view('bookings.user_bookings', compact('bookings'));
     }
