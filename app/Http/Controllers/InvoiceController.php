@@ -27,6 +27,10 @@ class InvoiceController extends Controller
             return redirect()->back()->with('error', 'Fatura apenas disponível para reservas pagas.');
         }
 
+        // Imave Variable for the invoice pdf / Not used in the view, but can be used for branding or logos
+        //$imagePath = public_path('storage/bungalows/cesae-digital-logo.png'); $image = "data:image/png;base64," . base64_encode(file_get_contents($imagePath));
+
+
         // Eager load the bungalow relationship
         // This ensures $booking->bungalow is available without N+1 queries.
         $booking->load('bungalow');

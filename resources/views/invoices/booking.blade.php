@@ -98,7 +98,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <img src="{{ public_path('storage/bungalows/12.jpeg') }}" alt="BungalowRental" class="logo">
+            {{-- <img src="{{ url('https://www.cesaedigital.pt/fldrSite/img/cesae-digital-logo.svg') }}"> --}}
             <h1>FATURA</h1>
             <p><strong>Nº da Fatura:</strong> {{ $booking->invoice_number }}</p>
             <p><strong>Data:</strong> {{ \Carbon\Carbon::parse($booking->paid_at)->format('d/m/Y') }}</p>
