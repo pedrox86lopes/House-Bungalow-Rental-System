@@ -21,7 +21,7 @@
                             $greeting = 'Boa noite'; // Good evening
                         }
                     @endphp
-                    Olá, <b>{{ Auth::user()->name }}!</b> {{ $greeting }}! <p>Bem-vindo(a) ao seu Dashboard.</p>
+                    Olá, <b>{{ Auth::user()->name }},</b> {{ $greeting }}! <p>Bem-vindo(a) ao seu Dashboard.</p>
                 </div>
             </div>
 
