@@ -35,7 +35,7 @@ This is a web application for booking bungalows, built with the Laravel framewor
     - Configure your database connection and PayPal API credentials in the `.env` file.
 4.  **Run database migrations:**
     ```bash
-    php artisan migrate
+    php artisan migrate (Just a reminder: All the migrations are inside database/migrations/Backup - Just move to ../
     ```
 5.  **Seed the database (optional):**
     ```bash
